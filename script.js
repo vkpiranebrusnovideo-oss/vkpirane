@@ -1,5 +1,5 @@
 // 1. KONFIGURÁCIA - TU DAJ SVOJU URL (nezabudni na / na konci)
-const DB_URL = "https://vk-pirane-e3953-default-rtdb.europe-west1.firebasedatabase.app";
+const DB_URL = "https://vk-pirane-e3953-default-rtdb.europe-west1.firebasedatabase.app/";
 
 // Pomocná funkcia pre komunikáciu s Firebase
 async function api(path, method = 'GET', body = null) {
