@@ -9,19 +9,16 @@ async function api(path, method = 'GET', body = null) {
     return await res.json();
 }
 
-// --- GLOBÁLNE PREMENNÉ ---
-let cart = JSON.parse(localStorage.getItem('piraneCart')) || [];
-
 // --- PREPÍNANIE STRÁNOK ---
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     const target = document.getElementById(pageId);
     if (target) target.style.display = 'block';
-    if (pageId === 'uvod') render(); 
+    render(); // Pri každom prepnutí obnovíme dáta
     window.scrollTo(0,0);
 }
 
-// --- ZÁPASY (Pridanie & Úprava) ---
+// --- ADMIN FUNKCIE (Zápasy, Hráčky, Produkty) ---
 async function addMatch() {
     const id = document.getElementById('editMatchIndex').value;
     const obj = {
@@ -32,28 +29,11 @@ async function addMatch() {
         time: document.getElementById('time').value,
         alertText: document.getElementById('alertText').value
     };
-    if (!obj.team1 || !obj.date) return alert("Meno a dátum!");
-
     if (id === "-1") await api('matches', 'POST', obj);
     else await api(`matches/${id}`, 'PATCH', obj);
-    
     location.reload();
 }
 
-async function editMatch(id) {
-    const m = await api(`matches/${id}`);
-    document.getElementById('team1').value = m.team1;
-    document.getElementById('team2').value = m.team2;
-    document.getElementById('score').value = m.score || '';
-    document.getElementById('date').value = m.date;
-    document.getElementById('time').value = m.time;
-    document.getElementById('alertText').value = m.alertText || '';
-    document.getElementById('editMatchIndex').value = id;
-    document.getElementById('saveMatchBtn').innerText = "AKTUALIZOVAŤ ZÁPAS";
-    window.scrollTo(0,0);
-}
-
-// --- SÚPISKA (Pridanie & Úprava) ---
 async function addPlayer() {
     const id = document.getElementById('editPlayerIndex').value;
     const obj = {
@@ -67,18 +47,6 @@ async function addPlayer() {
     location.reload();
 }
 
-async function editPlayer(id) {
-    const p = await api(`roster/${id}`);
-    document.getElementById('playerName').value = p.name;
-    document.getElementById('playerNumber').value = p.number;
-    document.getElementById('playerPosition').value = p.pos;
-    document.getElementById('playerImg').value = p.img;
-    document.getElementById('editPlayerIndex').value = id;
-    document.getElementById('savePlayerBtn').innerText = "AKTUALIZOVAŤ HRÁČKU";
-    window.scrollTo(0,0);
-}
-
-// --- FANSHOP (Pridanie & Úprava) ---
 async function addProduct() {
     const id = document.getElementById('editIndex').value;
     const sizes = []; document.querySelectorAll('.size-check:checked').forEach(cb => sizes.push(cb.value));
@@ -94,73 +62,62 @@ async function addProduct() {
     location.reload();
 }
 
-async function editProduct(id) {
-    const p = await api(`products/${id}`);
-    document.getElementById('prodName').value = p.name;
-    document.getElementById('prodPrice').value = p.price;
-    document.getElementById('prodColor').value = p.color || '';
-    document.getElementById('prodImg').value = p.img || '';
-    document.getElementById('editIndex').value = id;
-    document.querySelectorAll('.size-check').forEach(cb => cb.checked = p.sizes ? p.sizes.includes(cb.value) : false);
-    document.getElementById('saveBtn').innerText = "AKTUALIZOVAŤ PRODUKT";
-    window.scrollTo(0,0);
-}
-
-// --- MAZANIE ---
-async function deleteItem(path, id) {
-    if (confirm("Naozaj zmazať?")) {
-        await api(`${path}/${id}`, 'DELETE');
-        location.reload();
-    }
-}
-
-// --- RENDEROVANIE ---
+// --- RENDEROVANIE (Hlavný mozog stránky) ---
 async function render() {
-    const matches = await api('matches') || {};
-    const roster = await api('roster') || {};
-    const products = await api('products') || {};
-    const orders = await api('orders') || {};
+    const matchesData = await api('matches') || {};
+    const rosterData = await api('roster') || {};
+    const productsData = await api('products') || {};
 
-    // 1. HLAVNÝ WEB
+    // Transformácia objektov na polia pre lepšiu prácu
+    const matches = Object.keys(matchesData).map(key => ({ id: key, ...matchesData[key] }));
+    const roster = Object.keys(rosterData).map(key => ({ id: key, ...rosterData[key] }));
+    const products = Object.keys(productsData).map(key => ({ id: key, ...productsData[key] }));
+
+    // 1. RÝCHLY PREHĽAD NA DOMOVSKEJ STRÁNKE
+    const nextCont = document.getElementById('next-match-summary');
+    const lastCont = document.getElementById('last-match-summary');
+    
+    if (nextCont && lastCont && matches.length > 0) {
+        matches.sort((a, b) => new Date(a.date) - new Date(b.date));
+        const now = new Date();
+        const next = matches.find(m => new Date(m.date) >= now);
+        const past = [...matches].reverse().find(m => new Date(m.date) < now);
+
+        nextCont.innerHTML = next ? `<div class="match-card"><strong>${next.team1} vs ${next.team2}</strong><br>${next.date.split('-').reverse().join('. ')}</div>` : "TBA";
+        lastCont.innerHTML = past ? `<div class="match-card"><strong>${past.team1} ${past.score || ''} ${past.team2}</strong><br>${past.date.split('-').reverse().join('. ')}</div>` : "Žiadne výsledky";
+    }
+
+    // 2. KOMPLETNÉ ZOZNAMY (Zápasy, Súpiska, Fanshop)
     const mCont = document.getElementById('matches-container');
     if (mCont) {
-        mCont.innerHTML = Object.keys(matches).map(id => {
-            const it = matches[id];
-            return `<div class="match-card"><h3>${it.team1} ${it.score || 'vs'} ${it.team2}</h3><p>${it.date}</p></div>`;
-        }).join('');
+        mCont.innerHTML = matches.map(it => `<div class="match-card"><h3>${it.team1} ${it.score || 'vs'} ${it.team2}</h3><p>${it.date}</p></div>`).join('');
     }
 
     const rCont = document.getElementById('roster-container');
     if (rCont) {
-        rCont.innerHTML = Object.keys(roster).map(id => {
-            const it = roster[id];
-            return `<div class="product-card"><h3>#${it.number} ${it.name}</h3><p>${it.pos}</p></div>`;
-        }).join('');
+        rCont.innerHTML = roster.map(it => `<div class="product-card"><h3>#${it.number} ${it.name}</h3><p>${it.pos}</p></div>`).join('');
     }
 
-    // 2. ADMIN ZOZNAMY (Tlačidlá Edit a Delete)
+    const pCont = document.getElementById('products-container');
+    if (pCont) {
+        pCont.innerHTML = products.map(it => `<div class="product-card"><h3>${it.name}</h3><p>${it.price}</p></div>`).join('');
+    }
+
+    // 3. ADMIN ZOZNAMY
     const mList = document.getElementById('admin-matches-list');
     if (mList) {
-        mList.innerHTML = Object.keys(matches).map(id => `
-            <div class="list-item">
-                <span>${matches[id].team1} vs ${matches[id].team2}</span>
-                <div>
-                    <button onclick="editMatch('${id}')" style="background:green;color:white;padding:5px;">E</button>
-                    <button onclick="deleteItem('matches', '${id}')" style="background:red;color:white;padding:5px;">X</button>
-                </div>
-            </div>`).join('');
+        mList.innerHTML = matches.map(it => `<div class="list-item"><span>${it.team1} vs ${it.team2}</span> <button onclick="deleteItem('matches', '${it.id}')">X</button></div>`).join('');
     }
+    const pList = document.getElementById('admin-products-list');
+    if (pList) {
+        pList.innerHTML = products.map(it => `<div class="list-item"><span>${it.name}</span> <button onclick="deleteItem('products', '${it.id}')">X</button></div>`).join('');
+    }
+}
 
-    const rList = document.getElementById('admin-roster-list');
-    if (rList) {
-        rList.innerHTML = Object.keys(roster).map(id => `
-            <div class="list-item">
-                <span>#${roster[id].number} ${roster[id].name}</span>
-                <div>
-                    <button onclick="editPlayer('${id}')" style="background:green;color:white;padding:5px;">E</button>
-                    <button onclick="deleteItem('roster', '${id}')" style="background:red;color:white;padding:5px;">X</button>
-                </div>
-            </div>`).join('');
+async function deleteItem(path, id) {
+    if (confirm("Naozaj zmazať?")) {
+        await api(`${path}/${id}`, 'DELETE');
+        location.reload();
     }
 }
 
