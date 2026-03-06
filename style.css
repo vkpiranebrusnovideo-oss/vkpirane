@@ -1,0 +1,49 @@
+:root {
+    --primary: #002d5b;
+    --secondary: #ff6600;
+    --light: #f4f4f4;
+    --dark: #1a1a1a;
+}
+
+body { font-family: 'Roboto', sans-serif; margin: 0; background: var(--light); color: var(--dark); }
+h1, h2 { font-family: 'Oswald', sans-serif; text-transform: uppercase; }
+.container { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+/* Header */
+header { background: var(--primary); color: white; padding: 40px 0; text-align: center; border-bottom: 5px solid var(--secondary); }
+header h1 span { color: var(--secondary); }
+
+/* Navigácia */
+nav { background: var(--dark); sticky; top: 0; z-index: 100; }
+nav .container { display: flex; justify-content: center; }
+nav a { color: white; padding: 15px 20px; text-decoration: none; font-weight: bold; transition: 0.3s; }
+nav a:hover { background: var(--secondary); }
+.admin-link { border-left: 1px solid #444; color: #888; font-size: 0.9em; }
+
+/* Sekcie */
+section { padding: 40px 0; }
+h2 { border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 30px; }
+.dot { height: 12px; width: 12px; background-color: var(--secondary); display: inline-block; margin-right: 10px; }
+
+/* Mriežka (Grid) */
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+
+/* Karty */
+.match-card, .product-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+.match-card { border-left: 5px solid var(--secondary); }
+.price { font-weight: bold; color: var(--secondary); font-size: 1.2em; }
+.btn { background: var(--primary); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 4px; text-transform: uppercase; font-weight: bold; }
+.btn:hover { background: var(--secondary); }
+
+/* Admin */
+.admin-body { display: flex; align-items: center; justify-content: center; height: 100vh; background: #ddd; }
+.admin-card { background: white; padding: 30px; border-radius: 10px; width: 100%; max-width: 400px; }
+.form-group input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+
+.welcome-box { background: var(--primary); color: white; padding: 40px; border-radius: 10px; text-align: center; margin-bottom: 30px; }
+.overview-card { background: white; padding: 20px; border-radius: 8px; border-top: 4px solid var(--secondary); text-align: center; }
+.overview-card h4 { margin-top: 0; color: var(--primary); text-transform: uppercase; }
+.cart-btn { cursor:pointer; color:white; font-weight:bold; background: var(--secondary); padding: 8px 15px; border-radius: 20px; transition: 0.3s; }
+.cart-btn:hover { transform: scale(1.05); }
+.nav-links a { margin-right: 15px; text-decoration: none; color: white; font-weight: bold; }
+

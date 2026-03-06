@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <title>Prihlásenie | VK Pirane</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-body">
+    <div class="admin-card">
+        <h2>Admin Prihlásenie</h2>
+        <input type="password" id="adminPass" placeholder="Zadaj heslo">
+        <button onclick="checkLogin()" class="btn btn-block">Vstúpiť</button>
+        <p id="error" style="color:red; display:none; margin-top:10px;">Nesprávne heslo!</p>
+        <br>
+        <a href="index.html" style="font-size:0.8em; color:#666;">Späť na web</a>
+    </div>
+
+    <script>
+        function checkLogin() {
+            const pass = document.getElementById('adminPass').value;
+            if (pass === 'pirane2024') {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                window.location.href = 'admin.html';
+            } else {
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

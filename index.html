@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VK Pirane Brusno | Oficiálny web</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <h1>VK PIRANE <span>BRUSNO</span></h1>
+        <p>Volejbalový klub s dravým srdcom</p>
+    </div>
+</header>
+
+<nav>
+    <div class="container" style="display:flex; justify-content: space-between; align-items: center;">
+        <div class="nav-links">
+            <a href="#" onclick="showPage('uvod')">Domov</a>
+            <a href="#" onclick="showPage('zapasy')">Zápasy</a>
+            <a href="#" onclick="showPage('supiska')">Súpiska</a>
+            <a href="#" onclick="showPage('fanshop')">Fanshop</a>
+        </div>
+        <div onclick="toggleCart()" class="cart-btn">
+            🛒 Košík (<span id="cart-count">0</span>)
+        </div>
+        <a href="login.html" class="admin-link">Admin</a>
+    </div>
+</nav>
+
+<main class="container">
+    <!-- ÚVODNÁ STRÁNKA -->
+    <section id="uvod" class="page">
+        <div class="welcome-box">
+            <h2>Vitajte na oficiálnom webe VK Pirane!</h2>
+            <p>Sme hrdý volejbalový klub z Brusna, kde vášeň pre hru spájame s dravosťou pirane. Sledujte naše výsledky a podporte nás v hale!</p>
+        </div>
+        
+        <div class="quick-overview grid">
+            <div class="overview-card">
+                <h4>⬅️ Posledný zápas</h4>
+                <div id="last-match-summary"></div>
+            </div>
+            <div class="overview-card">
+                <h4>➡️ Najbližší zápas</h4>
+                <div id="next-match-summary"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- OSTATNÉ SEKCE (predvolene skryté cez CSS) -->
+    <section id="zapasy" class="page" style="display:none;">
+        <h2><span class="dot"></span> Kompletný program zápasov</h2>
+        <div id="matches-container" class="grid"></div>
+    </section>
+
+    <section id="supiska" class="page" style="display:none;">
+        <h2><span class="dot"></span> Súpiska tímu</h2>
+        <div id="roster-container" class="grid"></div>
+    </section>
+
+    <section id="fanshop" class="page" style="display:none;">
+        <h2><span class="dot"></span> Klubový Fanshop</h2>
+        <div id="products-container" class="grid"></div>
+    </section>
+</main>
+
+<!-- MODALY (Kódy zostávajú rovnaké ako predtým) -->
+<div id="order-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; padding:25px; border-radius:10px; max-width:400px; width:90%; position:relative;">
+        <span onclick="closeModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:28px;">&times;</span>
+        <h3 id="order-item-name"></h3>
+        <div id="order-gallery" style="display:flex; gap:5px; margin-bottom:10px; overflow-x:auto;"></div>
+        <img id="order-main-img" src="" style="width:100%; border-radius:5px; margin-bottom:15px; max-height: 250px; object-fit: contain;">
+        <label>Farba:</label><select id="selectedColor" style="width:100%; padding:8px; margin-bottom:10px;"></select>
+        <label>Veľkosť:</label><select id="selectedSize" style="width:100%; padding:8px; margin-bottom:10px;"></select>
+        <button onclick="addToCart()" style="width:100%; background:#ff6600; color:white; border:none; padding:15px; cursor:pointer; font-weight:bold; border-radius:5px;">VLOŽIŤ DO KOŠÍKA</button>
+    </div>
+</div>
+
+<div id="cart-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
+    <div style="background:white; padding:25px; border-radius:10px; max-width:500px; width:95%; margin:20px;">
+        <span onclick="toggleCart()" style="float:right; cursor:pointer; font-size:24px;">&times;</span>
+        <h2>Váš košík</h2>
+        <div id="cart-items-list"></div>
+        <hr>
+        <input type="text" id="custName" placeholder="Meno"><input type="email" id="custEmail" placeholder="Email">
+        <input type="tel" id="custPhone" placeholder="Telefón"><input type="text" id="custAddress" placeholder="Adresa">
+        <button onclick="submitOrder()" style="width:100%; background:green; color:white; border:none; padding:15px; cursor:pointer; font-weight:bold;">ODOSLAŤ</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
