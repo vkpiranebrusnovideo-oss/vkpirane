@@ -1,7 +1,5 @@
-// 1. KONFIGURÁCIA - TU DAJ SVOJU URL (nezabudni na / na konci)
 const DB_URL = "https://vk-pirane-e3953-default-rtdb.europe-west1.firebasedatabase.app/";
 
-// Pomocná funkcia pre komunikáciu s Firebase
 async function api(path, method = 'GET', body = null) {
     const options = { method, headers: { 'Content-Type': 'application/json' } };
     if (body) options.body = JSON.stringify(body);
@@ -9,60 +7,96 @@ async function api(path, method = 'GET', body = null) {
     return await res.json();
 }
 
-// --- PREPÍNANIE STRÁNOK ---
+let cart = JSON.parse(localStorage.getItem('piraneCart')) || [];
+
 function showPage(pageId) {
     document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
     const target = document.getElementById(pageId);
     if (target) target.style.display = 'block';
-    render(); // Pri každom prepnutí obnovíme dáta
+    render(); 
     window.scrollTo(0,0);
 }
 
-// --- ADMIN FUNKCIE (Zápasy, Hráčky, Produkty) ---
+// --- ZÁPASY ---
 async function addMatch() {
     const id = document.getElementById('editMatchIndex').value;
     const obj = {
-        team1: document.getElementById('team1').value,
-        team2: document.getElementById('team2').value,
-        score: document.getElementById('score').value,
-        date: document.getElementById('date').value,
-        time: document.getElementById('time').value,
-        alertText: document.getElementById('alertText').value
+        team1: document.getElementById('team1').value, team2: document.getElementById('team2').value,
+        score: document.getElementById('score').value, date: document.getElementById('date').value,
+        time: document.getElementById('time').value, alertText: document.getElementById('alertText').value
     };
     if (id === "-1") await api('matches', 'POST', obj);
     else await api(`matches/${id}`, 'PATCH', obj);
     location.reload();
 }
 
+// --- SÚPISKA ---
 async function addPlayer() {
     const id = document.getElementById('editPlayerIndex').value;
     const obj = {
-        name: document.getElementById('playerName').value,
-        number: document.getElementById('playerNumber').value,
-        pos: document.getElementById('playerPosition').value,
-        img: document.getElementById('playerImg').value || 'https://via.placeholder.com'
+        name: document.getElementById('playerName').value, number: document.getElementById('playerNumber').value,
+        pos: document.getElementById('playerPosition').value, img: document.getElementById('playerImg').value
     };
     if (id === "-1") await api('roster', 'POST', obj);
     else await api(`roster/${id}`, 'PATCH', obj);
     location.reload();
 }
 
+// --- FANSHOP ---
 async function addProduct() {
     const id = document.getElementById('editIndex').value;
-    const sizes = []; document.querySelectorAll('.size-check:checked').forEach(cb => sizes.push(cb.value));
+    const sz = []; document.querySelectorAll('.size-check:checked').forEach(cb => sz.push(cb.value));
     const obj = {
-        name: document.getElementById('prodName').value,
-        price: document.getElementById('prodPrice').value,
-        color: document.getElementById('prodColor').value,
-        img: document.getElementById('prodImg').value,
-        sizes: sizes
+        name: document.getElementById('prodName').value, price: document.getElementById('prodPrice').value,
+        color: document.getElementById('prodColor').value, img: document.getElementById('prodImg').value, sizes: sz
     };
     if (id === "-1") await api('products', 'POST', obj);
     else await api(`products/${id}`, 'PATCH', obj);
     location.reload();
 }
 
-// --- RENDEROVANIE (Hlavný mozog stránky) ---
+// --- KOŠÍK (OPRAVENÝ PRE FIREBASE ID) ---
+async function openOrder(id) {
+    const p = await api(`products/${id}`);
+    if (!p) return;
+
+    document.getElementById('order-item-name').innerText = p.name;
+    const imgList = p.img.split(',').map(i => i.trim());
+    document.getElementById('order-main-img').src = imgList[0];
+    
+    document.getElementById('selectedColor').innerHTML = p.color ? p.color.split(',').map(c => `<option value="${c.trim()}">${c.trim()}</option>`).join('') : '<option value="Základná">Základná</option>';
+    document.getElementById('selectedSize').innerHTML = p.sizes ? p.sizes.map(s => `<option value="${s}">${s}</option>`).join('') : '<option value="Uni">Univerzálna</option>';
+    
+    // Uložíme si aktuálne dáta do globálnej premennej pre addToCart
+    window.currentActiveProduct = { ...p, fbId: id };
+    document.getElementById('order-modal').style.display = 'flex';
+}
+
+function addToCart() {
+    const p = window.currentActiveProduct;
+    cart.push({ name: p.name, price: p.price, color: document.getElementById('selectedColor').value, size: document.getElementById('selectedSize').value, id: Date.now() });
+    updateCart(); document.getElementById('order-modal').style.display = 'none';
+    alert("Pridané do košíka!");
+}
+
+function updateCart() {
+    localStorage.setItem('piraneCart', JSON.stringify(cart));
+    if(document.getElementById('cart-count')) document.getElementById('cart-count').innerText = cart.length;
+    if(document.getElementById('cart-items-list')) {
+        document.getElementById('cart-items-list').innerHTML = cart.map((it, i) => `<div style="display:flex;justify-content:space-between;padding:5px;border-bottom:1px solid #eee;"><span>${it.name}</span><button onclick="removeFromCart(${i})">X</button></div>`).join('');
+    }
+}
+function removeFromCart(i) { cart.splice(i, 1); updateCart(); }
+function toggleCart() { const m = document.getElementById('cart-modal'); m.style.display = m.style.display === 'none' ? 'flex' : 'none'; }
+
+async function submitOrder() {
+    const order = { items: cart, name: document.getElementById('custName').value, email: document.getElementById('custEmail').value, phone: document.getElementById('custPhone').value, addr: document.getElementById('custAddress').value, delivery: document.getElementById('deliveryMethod').value, status: 'Nová', date: new Date().toLocaleString() };
+    if (!order.name || cart.length === 0) return alert("Prázdny košík alebo chýba meno!");
+    await api('orders', 'POST', order);
+    cart = []; updateCart(); toggleCart(); alert("Objednávka odoslaná!"); location.reload();
+}
+
+// --- RENDER (OPRAVENÝ) ---
 async function render() {
     const matchesData = await api('matches') || {};
     const rosterData = await api('roster') || {};
@@ -72,58 +106,39 @@ async function render() {
     const roster = Object.keys(rosterData).map(key => ({ id: key, ...rosterData[key] }));
     const products = Object.keys(productsData).map(key => ({ id: key, ...productsData[key] }));
 
-    // 1. RÝCHLY PREHĽAD NA DOMOVSKEJ STRÁNKE
-    const nextCont = document.getElementById('next-match-summary');
-    const lastCont = document.getElementById('last-match-summary');
-    
-    if (nextCont && lastCont && matches.length > 0) {
+    // Domov
+    const nCont = document.getElementById('next-match-summary'), lCont = document.getElementById('last-match-summary');
+    if (nCont && lCont && matches.length > 0) {
         matches.sort((a, b) => new Date(a.date) - new Date(b.date));
-        const now = new Date();
-        const next = matches.find(m => new Date(m.date) >= now);
-        const past = [...matches].reverse().find(m => new Date(m.date) < now);
-
-        nextCont.innerHTML = next ? `<div class="match-card" style="${next.alertText ? 'border:2px solid #ff6600;' : ''}">${next.alertText ? `<div style="background:#ff6600;color:white;padding:3px;font-size:0.7em;">${next.alertText}</div>` : ''}<strong>${next.team1} vs ${next.team2}</strong><br>${next.date.split('-').reverse().join('. ')}</div>` : "TBA";
-        lastCont.innerHTML = past ? `<div class="match-card"><strong>${past.team1} ${past.score || 'vs'} ${past.team2}</strong><br>${past.date.split('-').reverse().join('. ')}</div>` : "Žiadne výsledky";
+        const next = matches.find(m => new Date(m.date) >= new Date());
+        const past = [...matches].reverse().find(m => new Date(m.date) < new Date());
+        nCont.innerHTML = next ? `<strong>${next.team1} vs ${next.team2}</strong>` : "TBA";
+        lCont.innerHTML = past ? `<strong>${past.team1} ${past.score || ''} ${past.team2}</strong>` : "Žiadne výsledky";
     }
 
-    // 2. SÚPISKA (S fotkami a číslami)
-    const rCont = document.getElementById('roster-container');
-    if (rCont) {
-        rCont.innerHTML = roster.map(it => `
-            <div class="product-card">
-                <div style="font-size:1.8em; font-weight:bold; color:#ff6600;">#${it.number}</div>
-                <img src="${it.img}" style="width:100%;height:180px;object-fit:cover;border-radius:5px;" onerror="this.src='https://via.placeholder.com'">
-                <h3>${it.name}</h3>
-                <p style="font-size:0.9em;color:#666;">${it.pos}</p>
-            </div>`).join('');
+    // Zápasy podstránka
+    if (document.getElementById('matches-container')) {
+        document.getElementById('matches-container').innerHTML = matches.map(it => `<div class="match-card"><h3>${it.team1} ${it.score || 'vs'} ${it.team2}</h3><p>${it.date}</p></div>`).join('');
     }
 
-    // 3. FANSHOP (S fotkami a tlačidlom Kúpiť)
-    const pCont = document.getElementById('products-container');
-    if (pCont) {
-        pCont.innerHTML = products.map((it) => `
+    // Súpiska podstránka
+    if (document.getElementById('roster-container')) {
+        document.getElementById('roster-container').innerHTML = roster.map(it => `<div class="product-card"><img src="${it.img}" style="width:100%;height:150px;object-fit:cover;"><h3>#${it.number} ${it.name}</h3></div>`).join('');
+    }
+
+    // Fanshop podstránka
+    if (document.getElementById('products-container')) {
+        document.getElementById('products-container').innerHTML = products.map(it => `
             <div class="product-card">
-                <img src="${it.img.split(',')[0]}" style="width:100%;border-radius:5px;height:180px;object-fit:cover;" onerror="this.src='https://via.placeholder.com'">
+                <img src="${it.img.split(',')[0]}" style="width:100%;height:150px;object-fit:cover;">
                 <h3>${it.name}</h3>
-                <p class="price">${it.price}</p>
                 <button class="btn" onclick="openOrder('${it.id}')">Kúpiť</button>
             </div>`).join('');
     }
-
-    // 4. ADMIN ZOZNAMY (S tlačidlom Edit 'E')
-    const mList = document.getElementById('admin-matches-list');
-    if (mList) {
-        mList.innerHTML = matches.map(it => `<div class="list-item"><span>${it.team1} vs ${it.team2}</span><div><button onclick="editMatch('${it.id}')" style="background:green;color:white;padding:2px 8px;cursor:pointer;">E</button><button onclick="deleteItem('matches', '${it.id}')" style="background:red;color:white;padding:2px 8px;cursor:pointer;">X</button></div></div>`).join('');
-    }
-    const rList = document.getElementById('admin-roster-list');
-    if (rList) {
-        rList.innerHTML = roster.map(it => `<div class="list-item"><span>#${it.number} ${it.name}</span><div><button onclick="editPlayer('${it.id}')" style="background:green;color:white;padding:2px 8px;cursor:pointer;">E</button><button onclick="deleteItem('roster', '${it.id}')" style="background:red;color:white;padding:2px 8px;cursor:pointer;">X</button></div></div>`).join('');
-    }
-    const pList = document.getElementById('admin-products-list');
-    if (pList) {
-        pList.innerHTML = products.map(it => `<div class="list-item"><span>${it.name}</span><div><button onclick="editProduct('${it.id}')" style="background:green;color:white;padding:2px 8px;cursor:pointer;">E</button><button onclick="deleteItem('products', '${it.id}')" style="background:red;color:white;padding:2px 8px;cursor:pointer;">X</button></div></div>`).join('');
-    }
 }
+
+async function deleteItem(path, id) { if (confirm("Zmazať?")) { await api(`${path}/${id}`, 'DELETE'); location.reload(); } }
+function closeModal() { document.getElementById('order-modal').style.display='none'; }
 
 document.addEventListener('DOMContentLoaded', () => {
     render();
