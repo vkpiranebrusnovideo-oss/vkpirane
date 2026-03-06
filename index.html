@@ -24,7 +24,7 @@
             <a href="#" onclick="showPage('supiska')">Súpiska</a>
             <a href="#" onclick="showPage('fanshop')">Fanshop</a>
         </div>
-        <div onclick="toggleCart()" class="cart-btn">
+        <div onclick="toggleCart()" class="cart-btn" style="cursor:pointer; color:white; background:#ff6600; padding:8px 15px; border-radius:20px;">
             🛒 Košík (<span id="cart-count">0</span>)
         </div>
         <a href="login.html" class="admin-link">Admin</a>
@@ -32,64 +32,68 @@
 </nav>
 
 <main class="container">
-    <!-- ÚVODNÁ STRÁNKA -->
+    <!-- DOMOV -->
     <section id="uvod" class="page">
-        <div class="welcome-box">
-            <h2>Vitajte na oficiálnom webe VK Pirane!</h2>
-            <p>Sme hrdý volejbalový klub z Brusna, kde vášeň pre hru spájame s dravosťou pirane. Sledujte naše výsledky a podporte nás v hale!</p>
+        <div class="welcome-box" style="text-align:center; padding:40px; background:#002d5b; color:white; border-radius:10px; margin-bottom:20px;">
+            <h2>Vitajte na webe VK Pirane!</h2>
+            <p>Sledujte naše zápasy, súpisku a podporte nás nákupom v našom fanshope.</p>
         </div>
-        
-        <div class="quick-overview grid">
-            <div class="overview-card">
-                <h4>⬅️ Posledný zápas</h4>
-                <div id="last-match-summary"></div>
-            </div>
-            <div class="overview-card">
-                <h4>➡️ Najbližší zápas</h4>
-                <div id="next-match-summary"></div>
-            </div>
+        <div class="grid">
+            <div class="match-card" id="last-match-summary"><h4>Posledný zápas</h4></div>
+            <div class="match-card" id="next-match-summary"><h4>Najbližší zápas</h4></div>
         </div>
     </section>
 
-    <!-- OSTATNÉ SEKCE (predvolene skryté cez CSS) -->
+    <!-- ZÁPASY -->
     <section id="zapasy" class="page" style="display:none;">
-        <h2><span class="dot"></span> Kompletný program zápasov</h2>
+        <h2><span class="dot"></span> Zápasy</h2>
         <div id="matches-container" class="grid"></div>
     </section>
 
+    <!-- SÚPISKA -->
     <section id="supiska" class="page" style="display:none;">
         <h2><span class="dot"></span> Súpiska tímu</h2>
         <div id="roster-container" class="grid"></div>
     </section>
 
+    <!-- FANSHOP -->
     <section id="fanshop" class="page" style="display:none;">
-        <h2><span class="dot"></span> Klubový Fanshop</h2>
+        <h2><span class="dot"></span> Fanshop</h2>
         <div id="products-container" class="grid"></div>
     </section>
 </main>
 
-<!-- MODALY (Kódy zostávajú rovnaké ako predtým) -->
+<!-- MODAL DETAIL PRODUKTU -->
 <div id="order-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:white; padding:25px; border-radius:10px; max-width:400px; width:90%; position:relative;">
         <span onclick="closeModal()" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size:28px;">&times;</span>
         <h3 id="order-item-name"></h3>
         <div id="order-gallery" style="display:flex; gap:5px; margin-bottom:10px; overflow-x:auto;"></div>
-        <img id="order-main-img" src="" style="width:100%; border-radius:5px; margin-bottom:15px; max-height: 250px; object-fit: contain;">
-        <label>Farba:</label><select id="selectedColor" style="width:100%; padding:8px; margin-bottom:10px;"></select>
-        <label>Veľkosť:</label><select id="selectedSize" style="width:100%; padding:8px; margin-bottom:10px;"></select>
+        <img id="order-main-img" src="" style="width:100%; border-radius:5px; margin-bottom:15px; max-height:250px; object-fit:contain;">
+        <label>Farba:</label><select id="selectedColor" style="width:100%; padding:10px; margin-bottom:10px;"></select>
+        <label>Veľkosť:</label><select id="selectedSize" style="width:100%; padding:10px; margin-bottom:15px;"></select>
         <button onclick="addToCart()" style="width:100%; background:#ff6600; color:white; border:none; padding:15px; cursor:pointer; font-weight:bold; border-radius:5px;">VLOŽIŤ DO KOŠÍKA</button>
     </div>
 </div>
 
+<!-- MODAL KOŠÍK -->
 <div id="cart-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; align-items:center; justify-content:center; overflow-y:auto;">
-    <div style="background:white; padding:25px; border-radius:10px; max-width:500px; width:95%; margin:20px;">
+    <div style="background:white; padding:25px; border-radius:10px; max-width:500px; width:95%; margin:20px; color:#333;">
         <span onclick="toggleCart()" style="float:right; cursor:pointer; font-size:24px;">&times;</span>
         <h2>Váš košík</h2>
-        <div id="cart-items-list"></div>
+        <div id="cart-items-list" style="margin-bottom:20px;"></div>
         <hr>
-        <input type="text" id="custName" placeholder="Meno"><input type="email" id="custEmail" placeholder="Email">
-        <input type="tel" id="custPhone" placeholder="Telefón"><input type="text" id="custAddress" placeholder="Adresa">
-        <button onclick="submitOrder()" style="width:100%; background:green; color:white; border:none; padding:15px; cursor:pointer; font-weight:bold;">ODOSLAŤ</button>
+        <h3>Doprava a údaje</h3>
+        <label>Doprava:</label>
+        <select id="deliveryMethod" style="width:100%; padding:10px; margin-bottom:10px;">
+            <option value="Packeta (dobierka)">Packeta (dobierka)</option>
+            <option value="Osobný odber v hale (hotovosť)">Osobný odber v hale (hotovosť)</option>
+        </select>
+        <input type="text" id="custName" placeholder="Meno a priezvisko" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input type="email" id="custEmail" placeholder="E-mail" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input type="tel" id="custPhone" placeholder="Telefónne číslo" style="width:100%; padding:10px; margin-bottom:10px; box-sizing:border-box;">
+        <input type="text" id="custAddress" placeholder="Adresa doručenia" style="width:100%; padding:10px; margin-bottom:15px; box-sizing:border-box;">
+        <button onclick="submitOrder()" style="width:100%; background:green; color:white; border:none; padding:15px; cursor:pointer; font-weight:bold; border-radius:5px;">ODOSLAŤ OBJEDNÁVKU</button>
     </div>
 </div>
 
